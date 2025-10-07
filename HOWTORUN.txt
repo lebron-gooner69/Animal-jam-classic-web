@@ -1,0 +1,21 @@
+TO RUN IN THIS DIRECTORY WITH PYTHON INSTALLED RUN
+
+python3 -m http.server (any number that's 4 letters long. e.g 1005)
+
+EXAMPLE
+
+python3 -m http.server 1004
+
+in BASILISK or any browser that has the old flash plugin open the link
+
+http://localhost:(YOUR PORT)
+
+EXAMPLE
+
+http://localhost:1004
+
+TO RUN THE PROXY OPEN NODE SERVER WITH NODE JS INSTALLED RUN 
+
+node proxy.js OR node proxy
+
+AND YOU SHOULD BE GOOD. If you have issues contact me on discord my user is Thatoneham

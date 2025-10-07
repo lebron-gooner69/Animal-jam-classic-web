@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Game Client</title>
+  </head>
+  <body>
+    <style>
+      body {
+        margin: 0;
+      }
+    </style>
+    <script>
+      window.flashDebug = function(message) {
+        console.log("⚡ Flash Debug:", message);
+      };
+    </script>
+  
+    <embed id="flash-content"></embed>
+    <script>
+      var filenames = [];
+      for (var i = 0; i < navigator.plugins.length; ++i) {
+          filenames.push(navigator.plugins[i].filename);
+      }
+      console.log("the plugins are", filenames.join('\n'));
+      "use strict";
+      Object.defineProperty(navigator, "userAgent", {
+        get: function () {
+          return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Electron/9.0.0 AJClassicStage/9.9.5";
+        },
+        configurable: true
+      });
+      var originalCall = window.ExternalInterface ? window.ExternalInterface.call : function() {};
+      const globals = window.parent.globals;
+      
+      const flashContent = document.getElementById("flash-content");
+      flashContent.setAttribute("allowScriptAccess", "always");
+      flashContent.setAttribute("wmode", "window");
+      flashContent.style.width = "100vw"
+      flashContent.style.height = "100vh"
+      document.addEventListener("flashVarsReady", (event) => {
+        console.log("flashVarsReady", event.detail);
+        const flashVars = event.detail;
+        const flashVarsParams = Object.entries(flashVars)
+          .map(([key, val]) => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`)
+          .join("&");
+
+        flashContent.setAttribute("FlashVars", flashVarsParams);
+        flashContent.src = flashVars.clientURL;//flashVars.clientURL;
+        flashContent.style.display = "block";
+  
+      });
+      document.addEventListener("removed", () => document.body.innerHTML = "");
+
+      // pass resize events to flash client
+      window.addEventListener("resize", resize);
+
+      // External interface functions
+      // NOTE: complete_signup is hard coded in the flash client
+      function complete_signup(username, password) {
+        document.dispatchEvent(new CustomEvent("signupCompleted", {username, password}));
+      }
+
+      function aj_initialized() {
+         parent.document.dispatchEvent(new CustomEvent("initialized"));
+         console.log("over here!!")
+        // HACK: there's a race condition happening, so just retry resize a bunch of times
+        //   and hope it takes
+        for (let i = 0; i < 50; i++) {
+          setTimeout(() => resize(), i * 500);
+        }
+      }
+
+      function ajPrint(imageData) {
+         document.dispatchEvent(new CustomEvent("printImage", imageData));
+      }
+
+      function reloadSwfOrGetIP(reloadSwf, params) {
+         document.dispatchEvent(new CustomEvent("reloadGame", reloadSwf, params));
+      }
+
+      // TODO: fix this
+      function resize() {
+        const flashContent = document.getElementById("flash-content");
+        if (flashContent && flashContent.handleResize) {
+          try {
+            flashContent.handleResize(window.innerWidth, window.innerHeight);
+          }
+          catch (err) {
+            // Swallow error
+          }
+        }
+      }
+
+      window.addEventListener("error", err => {
+        document.dispatchEvent(new CustomEvent("reportError", err.stack || err.error.stack));
+      });
+      window.addEventListener("unhandledrejection", event => {
+        document.dispatchEvent(new CustomEvent("reportError", err.stack || err.error.stack));
+      });
+
+      window.addEventListener("beforeunload", event => {
+        const flashContent = document.getElementById("flash-content");
+        if (flashContent && typeof flashContent.unloadAJClient === "function") {
+          try {
+            flashContent.unloadAJClient();
+          }
+          catch (err) {
+            // Swallow error
+          }
+        };
+        delete event["returnValue"];
+      });
+      // document.dispatchEvent(new CustomEvent("flashVarsReady", {
+      //     detail: {"content":"https://ajcontent.akamaized.net/","blueboxPort":"443","smartfoxPort":"443","website":"http://www.animaljam.com/","build_version":"1","mdUrl":"https://jammercentral.animaljam.com/game/","deploy_version":"1713","sbStatTrackerIp":"stats.animaljam.com","sbStatModulator":"16","smoke_version":"1713","playerWallHost":"https://prod-wall.animaljam.com/wall","smartfoxServer":"iss02-classic.prod.animaljam.internal","blueboxServer":"iss02-classic.prod.animaljam.internal","clientURL":"https://ajcontent.akamaized.net/1713/ajclient.swf?v=1","currentTimestamp":1741695294,"country":"GB","locale":"en"}
+      //   }))
+      // setTimeout(() => document.dispatchEvent(new CustomEvent("load")), 100);
+    </script>
+  </body>
+</html>

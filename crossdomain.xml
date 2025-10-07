@@ -1,0 +1,8 @@
+<cross-domain-policy>
+    <allow-access-from domain="animaljam.com" to-ports="80,443"/>
+    <allow-access-from domain="*.animaljam.com" to-ports="80,443"/>
+    <allow-access-from domain="*.smartbombinteractive.com" to-ports="80,443"/>
+    <allow-access-from domain="localhost" to-ports="80,443,8080"/>
+    <allow-access-from domain="127.0.0.1" to-ports="80,443,8080"/>
+    <site-control permitted-cross-domain-policies="master-only"/>
+</cross-domain-policy>
